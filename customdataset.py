@@ -29,10 +29,13 @@ class TinyImageNet(D.Dataset):
         self.len = len(self.filenames)
     
     def __getitem__(self, index):
-        # return label also
+        # returns features, labels
         image = Image.open(self.filenames[index])
         image = rgb2lab(image)
-        return self.transform(image)
+        img_tensor = self.transform(image)
+        #labels = img_tensor[[1,2],:,:]
+        #return img_tensor, labels.view(1, -1)
+        return img_tensor[0,:,:], img_tensor[[1,2],:,:].view(1, -1)
     
     def __len__(self):
         return self.len
@@ -44,26 +47,21 @@ def imshow(img):
     plt.imshow(npimg)
     plt.show()
 
-imagenet = TinyImageNet(path)
-print(imagenet.len)
+def imshow_combine(feature, labels):
+    image = torch.zeros([3, 64, 64])
+    image[0] = feature
+    image[1] = labels[0]
+    image[2] = labels[1]
+    imshow(image)
 
-loader = D.DataLoader(imagenet, batch_size=1, shuffle=False)
-dataiter = iter(loader)
-images = dataiter.next()
+# imagenet = TinyImageNet(path)
+# loader = D.DataLoader(imagenet, batch_size=1, shuffle=False)
+# dataiter = iter(loader)
+# features, labels = dataiter.next()
 
-image = images[0]
+# feat = features[0]
+# lab = labels[0]
+# print(lab.size())
 
-# make image black and white
-print(image.size())
-print(image)
-
-#image[1,:,:] = 0
-#image[2,:,:] = 0
-# image[0,:,:] = 50
-
-
-imshow(image)
-
-#plt.figure(figsize=(16,8))
-#imshow(torchvision.utils.make_grid(images))
+# imshow_combine(feat, lab)
 
