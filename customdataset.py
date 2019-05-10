@@ -35,7 +35,7 @@ class TinyImageNet(D.Dataset):
         img_tensor = self.transform(image)
         #labels = img_tensor[[1,2],:,:]
         #return img_tensor, labels.view(1, -1)
-        return img_tensor[0,:,:], img_tensor[[1,2],:,:].view(1, -1)
+        return img_tensor[0,:,:], img_tensor[[1,2],:,:].view(1, -1) 
     
     def __len__(self):
         return self.len
