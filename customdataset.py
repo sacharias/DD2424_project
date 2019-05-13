@@ -16,26 +16,40 @@ from PIL import Image
 
 from skimage.color import rgb2lab, lab2rgb
 
-path = 'data/tiny-imagenet-200/train/n01443537/images/'
+#path = 'data/tiny-imagenet-200/train/n01443537/images/'
+path = 'data/canary-1/'
 
 class TinyImageNet(D.Dataset):
-    def __init__(self, root):
+    def __init__(self, root, build_dist=False):
         self.filenames = []
         self.root = root
-        self.transform = transforms.ToTensor()
-        filenames = glob.glob(osp.join(path, '*.JPEG'))
+        if build_dist:
+            self.transform = transforms.Compose([
+                transforms.Resize(256),
+                # transforms.ToTensor(),
+            ])
+        else:
+            self.transform = transforms.ToTensor()
+
+        filenames = glob.glob(osp.join(path, '*.jpg'))
         for fn in filenames:
             self.filenames.append(fn)
         self.len = len(self.filenames)
+        self.build_dist = build_dist
     
     def __getitem__(self, index):
         # returns features, labels
-        image = Image.open(self.filenames[index])
-        image = rgb2lab(image)
-        img_tensor = self.transform(image)
+        img = Image.open(self.filenames[index])
+        img = self.transform(img)
+        img = rgb2lab(img)
+
+        if (self.build_dist):
+            return transforms.ToTensor()(img)
+
+        return 0
         #labels = img_tensor[[1,2],:,:]
         #return img_tensor, labels.view(1, -1)
-        return img_tensor[0,:,:], img_tensor[[1,2],:,:].view(1, -1) 
+        # return img_tensor[0,:,:], img_tensor[[1,2],:,:].view(1, -1) 
     
     def __len__(self):
         return self.len
@@ -64,4 +78,3 @@ def imshow_combine(feature, labels):
 # print(lab.size())
 
 # imshow_combine(feat, lab)
-
