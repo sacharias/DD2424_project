@@ -13,9 +13,9 @@ class DistributionBuilder():
         self.distribution = np.zeros((22,22))
         self.classes = np.zeros((22,22))
         self.images = TreeDataset(build_dist=True)
+        self.edges = np.arange(-110, 120, 10)
     
     def build(self):
-        edges = np.arange(-110, 120, 10)
         total = math.ceil(len(self.images) // self.batch_size)
 
         with tqdm(total=total) as pbar:
@@ -23,7 +23,7 @@ class DistributionBuilder():
                 a = data[:,1,:,:].reshape([1,-1]).numpy()[0]
                 b = data[:,2,:,:].reshape([1,-1]).numpy()[0]
 
-                H, xedges, yedges = np.histogram2d(a, b, bins=edges)
+                H, xedges, yedges = np.histogram2d(a, b, bins=self.edges)
                 H = np.divide(H, a.shape[0])
                 self.distribution = self.distribution + H
                 pbar.update()
@@ -48,11 +48,13 @@ class DistributionBuilder():
 
     def print_data(self):
         print('count_classes:', np.count_nonzero(self.classes))
+        print('edges', self.edges)
+        print(np.where(self.classes > 0))
 
 
 db = DistributionBuilder()
-db.build()
+#db.build()
 #db.save()
-#db.load()
-#db.plot()
-#db.print_data()
+db.load()
+db.plot()
+db.print_data()
