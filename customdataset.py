@@ -16,24 +16,20 @@ from PIL import Image
 
 from skimage.color import rgb2lab, lab2rgb
 
-#path = 'data/tiny-imagenet-200/train/n01443537/images/'
-# path = 'data/canary-1/'
-
 class TinyImageNet(D.Dataset):
     def __init__(self, root, build_dist=False):
         self.filenames = []
         self.root = root
         if build_dist:
             self.transform = transforms.Compose([
-                #transforms.Resize(256),
-                #transforms.CenterCrop(224),
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
                 # transforms.ToTensor(),
-                transforms.Resize(64)
             ])
         else:
             self.transform = transforms.ToTensor()
 
-        filenames = glob.glob(osp.join(root, '*.JPEG'))
+        filenames = glob.glob(osp.join(root, '*.jpg'))
         for fn in filenames:
             self.filenames.append(fn)
         self.len = len(self.filenames)

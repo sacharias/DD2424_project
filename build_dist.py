@@ -1,89 +1,58 @@
+import math
 import numpy as np
-import torch
-import torchvision
-import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
-import numpy as np
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
+from matplotlib.colors import LogNorm
 from torch.utils import data as D
+from tqdm import tqdm
 
-from customdataset import TinyImageNet, imshow_combine
+from customdataset import TinyImageNet
 
-dist = np.zeros((22,22))
-
-# path = 'data/canary-1/'
-path = 'data/tiny-imagenet-200/train'
-tiny_imagenet = TinyImageNet(path, build_dist=True)
-
-batch_size = 51
-distribution = np.zeros((22,22))
-
-edges = np.arange(-110,110,10)
-# print(edges)
-
-a_high = 0
-a_low = 100
-
-for i, data in enumerate(D.DataLoader(tiny_imagenet, batch_size=batch_size, shuffle=False), 0):
-    print('hej')
-    a = data[:,1,:,:].reshape([1,-1]).numpy()[0]
-    b = data[:,2,:,:].reshape([1,-1]).numpy()[0]
-    #print(a.shape)
-    #print(b.shape)
-
-    #a = a + 110
-    #b = b + 110
-
-    #a = np.floor_divide(np.round(a + 110), 10)
-    #a = a.astype(int)
-    #b = np.floor_divide(np.round(b + 110), 10)
-    #b = b.astype(int)
-
-    #a = a[0:500]
-    #b = b[0:500]
-
-    print(a, b)
-    print('argmax', np.argmax(a), np.argmax(b))
-
-    H, xedges, yedges = np.histogram2d(a, b, bins=edges)
-    print(H.shape)
-    print(np.where(H > 0))
-
-
-    plt.imshow(H)
-    plt.show()
-    #distribution[a, b] 
-
-    #print(a)
-    #print(b)
-
-    #print(distribution[a,b])
-
-    #print(np.amin(a))
-    #print(np.amax(a))
+class DistributionBuilder():
+    def __init__(self, path):
+        self.batch_size = 50
+        self.distribution = np.zeros((22,22))
+        self.classes = np.zeros((22,22))
+        self.images = TinyImageNet(path, build_dist=True)
     
-    #print(distribution)
+    def build(self):
+        edges = np.arange(-110, 120, 10)
+        total = math.ceil(len(self.images) // self.batch_size)
 
+        with tqdm(total=total) as pbar:
+            for i, data in enumerate(D.DataLoader(self.images, batch_size=self.batch_size, shuffle=False), 0):
+                a = data[:,1,:,:].reshape([1,-1]).numpy()[0]
+                b = data[:,2,:,:].reshape([1,-1]).numpy()[0]
 
-    # stop += 1
-    # if stop > 5:
-    #     break
-    # a_channel = data[0, 0, :, :].numpy()
-    # b_channel = data[0, 1, :, :].numpy()
-    # X, Y = a_channel.shape
-    # print('i', i)
-    # for x in range(X):
-    #     for y in range(Y):
-    #         a = a_channel[x, y]
-    #         a = np.floor_divide(np.round(a + 110), 10)
-    #         a = int(a)
+                H, xedges, yedges = np.histogram2d(a, b, bins=edges)
+                H = np.divide(H, a.shape[0])
+                self.distribution = self.distribution + H
+                pbar.update()
+            
+            self.distribution = self.distribution / total
+            self.classes = np.where(self.distribution > 0, 1, 0)
+    
+    def plot(self):
+        plt.imshow(self.distribution)
+        plt.show()
 
-    #         b = b_channel[x, y]
-    #         b = np.floor_divide(np.round(b + 110), 10)
-    #         b = int(b)
+        plt.imshow(self.classes)
+        plt.show()
+    
+    def save(self):
+        np.save('distribution.npy', self.distribution)
+        np.save('classes.npy', self.classes)
+    
+    def load(self):
+        self.distribution = np.load('distribution.npy')
+        self.classes = np.load('classes.npy')
 
-    #         dist[a,b] = dist[a,b] + 1
+    def print_data(self):
+        print('count_classes:', np.count_nonzero(self.classes))
 
-# print(np.where(dist > 0))
+path = 'data/tree-training-1'
+db = DistributionBuilder(path)
+#db.build()
+#db.save()
+db.load()
+#db.plot()
+db.print_data()
