@@ -5,14 +5,14 @@ from matplotlib.colors import LogNorm
 from torch.utils import data as D
 from tqdm import tqdm
 
-from customdataset import TinyImageNet
+from customdataset import TreeDataset
 
 class DistributionBuilder():
-    def __init__(self, path):
+    def __init__(self):
         self.batch_size = 50
         self.distribution = np.zeros((22,22))
         self.classes = np.zeros((22,22))
-        self.images = TinyImageNet(path, build_dist=True)
+        self.images = TreeDataset(build_dist=True)
     
     def build(self):
         edges = np.arange(-110, 120, 10)
@@ -49,10 +49,10 @@ class DistributionBuilder():
     def print_data(self):
         print('count_classes:', np.count_nonzero(self.classes))
 
-path = 'data/tree-training-1'
-db = DistributionBuilder(path)
-#db.build()
+
+db = DistributionBuilder()
+db.build()
 #db.save()
-db.load()
+#db.load()
 #db.plot()
-db.print_data()
+#db.print_data()
