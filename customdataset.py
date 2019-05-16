@@ -88,19 +88,28 @@ def imshow(img_tensor, label_tensor=None):
     plt.show()
 
 def testDataset():
-    tree_d = TreeDataset()
-    loader = D.DataLoader(tree_d, batch_size=1, shuffle=False)
-    data_iter = iter(loader)
-    data = data_iter.next()
+    tree_d = TreeDataset(class_vector=True)
+    loader = D.DataLoader(tree_d, batch_size=16, shuffle=False)
+    # data_iter = iter(loader)
+    # data = data_iter.next()
     #feat, label = data_iter.next()
     #imshow(feat[0], label[0])
+    losses = []
+    for epoch in range(1):
+        print(epoch)
+        for i, data in enumerate(loader, 0):
+            # get the inputs
+            print('i', i)
+            
+    print('Finished Training')
+    # print(losses)
 
-def sakiTest():
-    mx = np.arange(484)
-    mx = np.reshape(mx, (22, -1))
+# def sakiTest():
+#     mx = np.arange(484)
+#     mx = np.reshape(mx, (22, -1))
 
-    print(mx.shape)
-    print(mx[21,21])
+#     print(mx.shape)
+#     print(mx[21,21])
 
 # sakiTest()
-# testDataset()
+testDataset()
