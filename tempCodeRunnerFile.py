@@ -1,5 +1,0 @@
-tree_d = TreeDataset()
-loader = D.DataLoader(tree_d, batch_size=1, shuffle=False)
-data_iter = iter(loader)
-feat, label = data_iter.next()
-imshow(feat[0], label[0])

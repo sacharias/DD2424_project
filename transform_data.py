@@ -12,9 +12,12 @@ NO_CLASSES = 484
 classes = np.arange(NO_CLASSES)
 classes = np.reshape(classes, (22, -1))
 
-# Transform images to pytorch
-# find . -name '*.jpg' -execdir mogrify -resize 224x224^ -gravity Center -extent 224x224 {} \;
-# image -> 224 x 224 x 3 in CIE LAB
+# HOW TO:
+# Transform images to tensor and class tensor
+# 1. make new folder '*-square' and run: find . -name '*.jpg' -execdir mogrify -resize 224x224^ -gravity Center -extent 224x224 {} \;
+# 2. run transform_data() that makes folder '*-tensor' (tensor of size 224 x 224 x 3 in CIELAB)
+# 3. run tensor_to_classtensor() that makes folder '*-classtensor' (tensor of size 224 x 224 x 3 in CIELAB)
+
 def transform_data():
     """
     Transforms image to tensor of size 224 x 224 x 3
@@ -47,12 +50,16 @@ def transform_data():
             pbar.update()
     print('total errors', errors)
 
+def channel_to_class(a, b):
+    a = (a + 110) // 10
+    b = (b + 110) // 10
+    c = classes[int(a), int(b)]
+    return c
+
 def tensor_to_classtensor():
     path = 'data/tree-training-1-tensor/'
-    feat_path = 'data/tree-training-1-c-feat/'
-    label_path = 'data/tree-training-1-c-label/'
+    end_path = 'data/tree-training-1-classtensor/'
     filenames = []
-
     for fn in glob.glob(osp.join(path, '*.pt')):
         filenames.append(fn)
     
@@ -60,40 +67,27 @@ def tensor_to_classtensor():
         for filename in filenames:
             basename = os.path.basename(filename)
             name = os.path.splitext(basename)[0]
-            feat_name = '{}{}_feat.pt'.format(feat_path, name)      
-            label_name = '{}{}_label.pt'.format(label_path, name)
+            end_name = '{}{}_c.pt'.format(end_path, name)
 
             img_tensor = torch.load(filename)
             img_tensor = img_tensor.numpy()
-            features = img_tensor[0, :, :]
-            labels = img_tensor[1:, :, :]
+            feat = img_tensor[0,:,:]
+            v_channel_to_class = np.vectorize(channel_to_class)
+            class_lab = v_channel_to_class(img_tensor[1,:,:], img_tensor[2,:,:])
 
-            # transforms labels to one-hot
-            vect_channel_to_class = np.vectorize(channel_to_class)
-            label = vect_channel_to_class(labels[0, :, :], labels[1, :, :])
+            res = np.zeros((2, feat.shape[0], feat.shape[1]))
+            res[0] = feat
+            res[1] = class_lab
 
-            label = to_one_hot(label) # shape 224 x 224 x 484
+            torch.save(res, end_name)
+            pbar.update()
 
-            # save it as .pt
-            features = torch.from_numpy(features)
-            label = torch.from_numpy(label)
-
-            torch.save(features, feat_name)
-            torch.save(label, label_name)
-              
-
-def to_one_hot(m):
-    one_hot = np.zeros((m.shape[0], m.shape[1], NO_CLASSES))
-    layer_idx = np.arange(m.shape[0]).reshape(m.shape[0], 1)
-    component_idx = np.tile(np.arange(m.shape[1]), (m.shape[0], 1))
-    one_hot[layer_idx, component_idx, m] = 1    
-    return one_hot
-
-def channel_to_class(a, b):
-    a = (a + 110) // 10
-    b = (b + 110) // 10
-    c = classes[int(a), int(b)]
-    return c
+# def to_one_hot(m):
+#     one_hot = np.zeros((m.shape[0], m.shape[1], NO_CLASSES))
+#     layer_idx = np.arange(m.shape[0]).reshape(m.shape[0], 1)
+#     component_idx = np.tile(np.arange(m.shape[1]), (m.shape[0], 1))
+#     one_hot[layer_idx, component_idx, m] = 1    
+#     return one_hot
 
 # transform_data()
 tensor_to_classtensor()
