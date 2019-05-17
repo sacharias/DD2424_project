@@ -15,4 +15,4 @@ def imshow(img_tensor):
     plt.imshow(img)
     plt.show()
 
-show_tensor()
+# show_tensor()
